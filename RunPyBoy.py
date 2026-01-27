@@ -1,10 +1,11 @@
 from pyboy import PyBoy
-import pyboy
 from pyboy.utils import WindowEvent
 from random import randrange
 from flask import Flask, jsonify, render_template
 import threading
 from PokemonData import POKEMON_CHAR_MAP, POKEMON_ID_TO_NAME, POKEMON_MOVES
+import os
+import datetime as dt
 
 app = Flask(__name__)
 latest_state = {}
@@ -14,12 +15,22 @@ def emulate():
     pyboy = PyBoy("Pokemon - Blue Version.gb", sound_volume=0)
     pyboy.set_emulation_speed(0)    #No speed limit
 
+    first_run = True
+    load_state(pyboy)
+
+    last_save_time = dt.datetime.now()
+
     while pyboy.tick():
         
         monitor(pyboy)
 
         if not is_save_loaded(pyboy):
             press_button(pyboy, WindowEvent.PRESS_BUTTON_A)    
+        elif first_run:
+            press_button(pyboy, WindowEvent.PRESS_BUTTON_A)
+            press_button(pyboy, WindowEvent.PRESS_BUTTON_A)
+            press_button(pyboy, WindowEvent.PRESS_BUTTON_A)
+            first_run = False
         else:
             match randrange(8):
                 case 0:
@@ -38,7 +49,11 @@ def emulate():
                     press_button(pyboy, WindowEvent.PRESS_ARROW_LEFT)
                 case 7:
                     press_button(pyboy, WindowEvent.PRESS_ARROW_RIGHT)
-                
+        
+        now = dt.datetime.now()
+        if (now - last_save_time).total_seconds() > 60:
+            save_state(pyboy)
+            last_save_time = now
 
 @app.route("/")
 def index():
@@ -236,6 +251,17 @@ def read_move(pyboy, addr):
 
 def is_save_loaded(pyboy):
     return pyboy.memory[0xD163] != 0
+
+def save_state(pyboy):
+    with open("state_file.state", "wb") as f:
+        pyboy.save_state(f)
+
+def load_state(pyboy):
+    if not os.path.exists("state_file.state"):
+        return
+    
+    with open("state_file.state", "rb") as f:
+        pyboy.load_state(f)
 
 t1 = threading.Thread(target=emulate, daemon=True)
 t1.start()
