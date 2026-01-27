@@ -54,6 +54,7 @@ def emulate():
         if (now - last_save_time).total_seconds() > 60:
             save_state(pyboy)
             last_save_time = now
+            print("Game state saved at ", now.strftime("%Y-%m-%d %H:%M:%S"))
 
 @app.route("/")
 def index():
@@ -195,7 +196,7 @@ def read_game_state(pyboy):
         elif (pokemon["level"] == 100):
             pokemon["next_level_exp"] = pokemon["exp"]
         else:
-            pokemon["next_level_exp"] = exp_for_level(pokemon["level"], pokemon["species"].get("growth", "medium_fast"))
+            pokemon["next_level_exp"] = exp_for_level(pokemon["level"]+1, pokemon["species"].get("growth", "medium_fast"))
 
     return data
 
