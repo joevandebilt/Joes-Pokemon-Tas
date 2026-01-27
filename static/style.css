@@ -1,0 +1,55 @@
+body {
+    background-color: black;
+    color: white;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+}
+
+#objectives-container {
+    width: 90%;
+    margin: auto;
+    padding: 10px;
+    margin-bottom: 20px;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+#objectives-container li {
+    list-style: square;
+}
+
+#objectives-container li.complete {
+    text-decoration: line-through;
+}
+
+.hidden {
+    display: none;
+}
+
+.party-entry {
+    width: 95%;
+    margin: auto;
+    padding: 5px;
+
+    display: flex;
+    justify-content: space-between;
+    vertical-align: middle;
+    align-items: center;
+
+    border: 0.2px solid white;
+}
+
+.name {
+    width: 20%;
+    margin-right: 12px;
+}
+
+.level, .hp, .exp {
+    width: 15%;
+}
+
+.moves {
+    width: 35%;
+}
