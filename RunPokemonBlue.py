@@ -2,10 +2,14 @@ from pyboy import PyBoy
 from pyboy.utils import WindowEvent
 from random import randrange
 from flask import Flask, jsonify, render_template
-import threading
+
 from PokemonData import POKEMON_CHAR_MAP, POKEMON_ID_TO_NAME, POKEMON_MOVES
+from controllers import RandomController
+
+import threading
 import os
 import datetime as dt
+
 
 app = Flask(__name__)
 latest_state = {}
@@ -32,23 +36,8 @@ def emulate():
             press_button(pyboy, WindowEvent.PRESS_BUTTON_A)
             first_run = False
         else:
-            match randrange(8):
-                case 0:
-                    press_button(pyboy, WindowEvent.PRESS_BUTTON_A)
-                case 1:
-                    press_button(pyboy, WindowEvent.PRESS_BUTTON_B)
-                case 2:
-                    press_button(pyboy, WindowEvent.PRESS_BUTTON_START)
-                case 3:
-                    press_button(pyboy, WindowEvent.PRESS_BUTTON_SELECT)
-                case 4:
-                    press_button(pyboy, WindowEvent.PRESS_ARROW_UP)
-                case 5:
-                    press_button(pyboy, WindowEvent.PRESS_ARROW_DOWN)
-                case 6:
-                    press_button(pyboy, WindowEvent.PRESS_ARROW_LEFT)
-                case 7:
-                    press_button(pyboy, WindowEvent.PRESS_ARROW_RIGHT)
+            key = RandomController.PickControl()
+            press_button(pyboy, key)
         
         now = dt.datetime.now()
         if (now - last_save_time).total_seconds() > 60:
