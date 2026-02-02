@@ -9,6 +9,10 @@ async function updateState() {
     document.getElementById("trainer").innerText = data.player_name;
     document.getElementById("trainer-party").innerText = `${data.player_name}'s Party: ${partySize}/6`;
 
+    for (var key in data.events) {
+        
+    }
+
     for (let i = 0; i < 6; i++) {
         let pokemonDiv = document.getElementById(`party-${i+1}`);
         if (pokemonDiv)
