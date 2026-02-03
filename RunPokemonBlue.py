@@ -6,7 +6,6 @@ from controllers import RandomController
 from flask import Flask, jsonify, render_template
 
 app = Flask(__name__)
-pyboy = None
 latest_state = {}
 
 
@@ -20,8 +19,7 @@ def state():
 
 def emulate():
     global latest_state
-    global pyboy
-    
+
     pyboy = Emulator.emulate("roms/Pokemon - Blue Version.gb")    
     while True:
         key = RandomController.PickControl()

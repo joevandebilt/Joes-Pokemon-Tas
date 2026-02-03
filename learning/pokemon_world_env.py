@@ -37,7 +37,12 @@ class PokemonWorldEnv(gym.Env):
             world_state["y"],
             world_state["map"],
             world_state["party_count"],
-            world_state["pokemon"][0]["level"]
+            world_state["pokemon"][0]["level"],
+            world_state["pokemon"][1]["level"],
+            world_state["pokemon"][2]["level"],
+            world_state["pokemon"][3]["level"],
+            world_state["pokemon"][4]["level"],
+            world_state["pokemon"][5]["level"]
         ], dtype=np.int32)
     
     def reset(self, seed=None, options=None):
