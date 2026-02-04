@@ -13,7 +13,7 @@ class PokemonWorldEnv(gym.Env):
 
     def __init__(self, render_mode=None):
 
-        self.pyboy = Emulator.emulate("roms/Pokemon - Blue Version.gb", 0, False)
+        self.pyboy = Emulator.emulate("roms/Pokemon - Blue Version.gb", 0, False, False)
 
         self.render_mode = render_mode
 
@@ -22,11 +22,13 @@ class PokemonWorldEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=(6,),
+            shape=(14,),
             dtype=np.int32
         )
 
         self.steps_taken = 0
+
+        self.total_reward = 0
     
     def _get_obs(self):
         world_state = mm.read_game_state(self.pyboy)
@@ -42,7 +44,10 @@ class PokemonWorldEnv(gym.Env):
             world_state["pokemon"][2]["level"],
             world_state["pokemon"][3]["level"],
             world_state["pokemon"][4]["level"],
-            world_state["pokemon"][5]["level"]
+            world_state["pokemon"][5]["level"],
+            world_state["events"]["oaks_parcel"],
+            world_state["events"]["pokedex"],
+            world_state["events"]["brock"],
         ], dtype=np.int32)
     
     def reset(self, seed=None, options=None):
@@ -74,32 +79,41 @@ class PokemonWorldEnv(gym.Env):
         obs = self._get_obs()
 
         reward = self.calulate_reward(obs)
-        terminated = False
+        self.total_reward += reward
 
         info = {}
 
         if (self.render_mode == "human"):
             self.render()
 
+        terminated = obs[13] == 1
         truncate = False
-        if self.steps_taken > 100000:
-            truncate = True
 
         return obs, reward, terminated, truncate, info
     
     def render(self):
         return
+    
+    def close(self):
+        self.pyboy.stop()        
 
     # REWARDS
     def calulate_reward(self, obs):
         reward = 0
 
+        reward += self.new_map_reward(obs)
         reward += self.new_tile_reward(obs)
         reward += self.level_up_reward(obs)
+        reward += self.oaks_parcel_collected(obs)
+        reward += self.pokedex_collected(obs)
+        reward += self.first_badge_collected(obs)
+
+        reward -= self.standing_still(obs)
 
         return reward
 
 
+    #1 reward for new tile
     def new_tile_reward(self, obs):
         reward = 0
 
@@ -110,20 +124,73 @@ class PokemonWorldEnv(gym.Env):
 
         if current_tile not in self.visited_tiles:
             self.visited_tiles.add(current_tile)
-            reward += 1  # Reward for visiting a new tile
+            reward += 0.01  # Reward for visiting a new tile
 
         return reward
     
+    def new_map_reward(self, obs):
+        reward = 0
+
+        current_map = obs[3]
+
+        if not hasattr(self, "visited_maps"):
+            self.visited_maps = set()
+
+        if current_map not in self.visited_maps:
+            self.visited_maps.add(current_map)
+            reward += 1  # Reward for visiting a new map
+
+        return reward
+
+    
+    #10 reward for pokemon level up
     def level_up_reward(self, obs):
         reward = 0
 
-        current_level = obs[5]  # First Pokemon's level
+        indexes = [5, 6, 7, 8, 9, 10]
 
-        if not hasattr(self, "last_level"):
-            self.last_level = current_level
+        current_levels = obs[indexes] # Pokemon levels        
 
-        if current_level > self.last_level:
-            reward += (current_level - self.last_level) * 10  # Reward for leveling up
-            self.last_level = current_level
+        if not hasattr(self, "last_levels"):
+            self.last_levels = current_levels
+
+        if np.any(current_levels > self.last_levels):
+            reward += 10  # Reward for leveling up
+            self.last_levels = current_levels
+
+        return reward
+    
+    #1000 reward for collecting oaks parcel
+    def oaks_parcel_collected(self, obs):
+        if obs[11] == 1:
+            return 1000
+        return 0
+        
+    #1000 reward for collecting pokedex
+    def pokedex_collected(self, obs):
+        if obs[12] == 1:
+            return 2000
+        return 0
+        
+    #10000 reward for collecting oaks parcel
+    def first_badge_collected(self, obs):
+        if obs[13] == 1:
+            return 10000
+        return 0
+    
+    def standing_still(self, obs):
+        reward = 0
+        
+        current_tile = (obs[1], obs[2], obs[3])  # x, y, map
+
+        if not hasattr(self, "last_places"):
+            self.last_places = []
+        
+        if (len(self.last_places) > 3):
+            counts = self.last_places.count(current_tile)
+            reward = counts * 0.001
+            self.last_places.pop(0)
+
+        self.last_places.append(current_tile)
 
         return reward

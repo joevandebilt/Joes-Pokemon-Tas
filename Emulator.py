@@ -26,15 +26,19 @@ PyBoyButton = {
     GameboyAction.SELECT: WindowEvent.PRESS_BUTTON_SELECT
 }
 
-def emulate(romPath, speed=2, useQuickSaves=True):
+def emulate(romPath, speed=2, useQuickSaves=True, headless=False):
     
-    pyboy = PyBoy(romPath, sound_volume=0, sound_emulated=False)
+    window = "SDL2"
+    if headless:
+        window = "null"
+
+    pyboy = PyBoy(romPath, sound_volume=0, sound_emulated=False, window=window)
     pyboy.set_emulation_speed(speed)    #No speed limit
 
     if useQuickSaves:
         quick_load(pyboy)
 
-        saveThread = threading.Thread(target=save_thread, args=pyboy, daemon=True)
+        saveThread = threading.Thread(target=save_thread, args=(pyboy,), daemon=True)
         saveThread.start()
 
     return pyboy

@@ -2,7 +2,7 @@ from memory_maps.static_data.pokemon_data import POKEMON_CHAR_MAP, POKEMON_ID_TO
 
 def read_game_state(pyboy):
     data = {
-        "map": pyboy.memory[0xD35E],
+        "map": pyboy.memory[0xD35E],    #https://glitchcity.wiki/wiki/List_of_maps_by_index_number_(Generation_I)
         "x": pyboy.memory[0xD361],
         "y": pyboy.memory[0xD362],
         "player_name": read_pokemon_string(pyboy, 0xD158, 4),
@@ -10,6 +10,7 @@ def read_game_state(pyboy):
         "in_battle": pyboy.memory[0xD057] != 0,
         "events":{
             "oaks_parcel": pyboy.memory[0xD60D] != 0,
+            "pokedex": (pyboy.memory[0xD2F7] & 0x01) != 0,
             "town_map": pyboy.memory[0xD5F3] != 0,
             "brock": pyboy.memory[0xD755] != 0,
             "misty": pyboy.memory[0xD75E] != 0,

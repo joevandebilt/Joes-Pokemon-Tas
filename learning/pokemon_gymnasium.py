@@ -4,7 +4,7 @@ from gymnasium.utils.env_checker import check_env
 
 register(
     id="pokemon-blue-gym-v1",
-    entry_point="learning.pokemon_world_env:PokemonWorldEnv",
+    entry_point="learning.pokemon_blue_world_env:PokemonWorldEnv",
 )
 
 def Train():
@@ -34,3 +34,12 @@ def Train():
 
     print(f"Episode finished! Total reward: {total_reward}")
     env.close()
+
+def GetGym():
+    env = gym.make("pokemon-blue-gym-v1")
+
+    print("Checking environment...")
+    check_env(env.unwrapped)  
+    print("Environment looks good!")
+
+    return env
