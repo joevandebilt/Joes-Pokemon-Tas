@@ -50,7 +50,7 @@ if __name__ == "__main__":
         env = pokemon_gymnasium.GetGym()
 
         checkpoint_callback = CheckpointCallback(
-            save_freq=2000,
+            save_freq=10000,
             save_path=models_dir,
             name_prefix="ppo_model"
         )
@@ -74,7 +74,7 @@ if __name__ == "__main__":
                 device="auto"
             )
 
-        model.learn(total_timesteps=100_000, callback=checkpoint_callback)
+        model.learn(total_timesteps=1_000_000, callback=checkpoint_callback)
 
         model.save(model_output_path)
 

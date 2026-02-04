@@ -8,9 +8,10 @@ def read_game_state(pyboy):
         "player_name": read_pokemon_string(pyboy, 0xD158, 4),
         "player_id": pyboy.memory[0xD359],
         "in_battle": pyboy.memory[0xD057] != 0,
+        "in_dialog": pyboy.memory[0xD730] != 0,
         "events":{
             "oaks_parcel": pyboy.memory[0xD60D] != 0,
-            "pokedex": (pyboy.memory[0xD2F7] & 0x01) != 0,
+            "pokedex": (pyboy.memory[0xD74E] & 0x01) != 0,
             "town_map": pyboy.memory[0xD5F3] != 0,
             "brock": pyboy.memory[0xD755] != 0,
             "misty": pyboy.memory[0xD75E] != 0,

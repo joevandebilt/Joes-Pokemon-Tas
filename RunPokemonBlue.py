@@ -19,7 +19,7 @@ def state():
 def emulate():
     global latest_state
 
-    pyboy = Emulator.emulate("roms/Pokemon - Blue Version.gb", 2, True)    
+    pyboy = Emulator.emulate("roms/Pokemon - Blue Version.gb", 3, False)    
     while True:
         #key = RandomController.PickControl()
         #Emulator.press_button(pyboy, key)

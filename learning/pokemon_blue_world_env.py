@@ -22,7 +22,7 @@ class PokemonWorldEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=(14,),
+            shape=(5,),
             dtype=np.int32
         )
 
@@ -33,27 +33,47 @@ class PokemonWorldEnv(gym.Env):
     def _get_obs(self):
         world_state = mm.read_game_state(self.pyboy)
 
-        return np.array([
+        obs = np.array([
             world_state["in_battle"],
             world_state["x"],
             world_state["y"],
             world_state["map"],
-            world_state["party_count"],
-            world_state["pokemon"][0]["level"],
-            world_state["pokemon"][1]["level"],
-            world_state["pokemon"][2]["level"],
-            world_state["pokemon"][3]["level"],
-            world_state["pokemon"][4]["level"],
-            world_state["pokemon"][5]["level"],
-            world_state["events"]["oaks_parcel"],
-            world_state["events"]["pokedex"],
-            world_state["events"]["brock"],
+            #world_state["party_count"],
+            world_state["pokemon"][0]["exp"],
+            #world_state["pokemon"][1]["exp"],
+            #world_state["pokemon"][2]["exp"],
+            #world_state["pokemon"][3]["exp"],
+            #world_state["pokemon"][4]["exp"],
+            #world_state["pokemon"][5]["exp"],
+            #world_state["events"]["oaks_parcel"],
+            #world_state["events"]["pokedex"],
+            #world_state["events"]["brock"],
         ], dtype=np.int32)
+
+        return obs, world_state
     
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
 
         Emulator.load_specific_state(self.pyboy, "reset")
+
+        #clear reward trackers
+        reward_attr = [
+            "visited_tiles",
+            "visited_tiles",
+            "visited_maps",
+            "last_levels",
+            "party_size",
+            "milestone_parcel",
+            "milestone_pokedex",
+            "milestone_badge",
+            "last_places"
+        ]
+
+        for attr in reward_attr:
+            if hasattr(self, attr):
+                delattr(self, attr)
+
 
         #Additional info to return for debugging or whatever
         info = {}
@@ -61,14 +81,13 @@ class PokemonWorldEnv(gym.Env):
         if self.render_mode == "human":
             self.render()
 
-        return self._get_obs(), info
+        obs, world_state = self._get_obs()
+
+        return obs, info
     
     def perform_action(self, action: GameboyAction):
-        if action == GameboyAction.NO_OP:
-            return
-        else:
-            button = Emulator.PyBoyButton.get(action)
-            Emulator.press_button(self.pyboy, button)
+        button = Emulator.PyBoyButton.get(action)
+        Emulator.press_button(self.pyboy, button)
     
     def step(self, action):
         action_enum = GameboyAction(action)
@@ -76,9 +95,9 @@ class PokemonWorldEnv(gym.Env):
 
         self.steps_taken += 1
 
-        obs = self._get_obs()
+        obs, world_state = self._get_obs()
 
-        reward = self.calulate_reward(obs)
+        reward = self.calulate_reward(obs, world_state)
         self.total_reward += reward
 
         info = {}
@@ -86,7 +105,7 @@ class PokemonWorldEnv(gym.Env):
         if (self.render_mode == "human"):
             self.render()
 
-        terminated = obs[13] == 1
+        terminated = world_state["events"]["brock"]
         truncate = False
 
         return obs, reward, terminated, truncate, info
@@ -98,99 +117,146 @@ class PokemonWorldEnv(gym.Env):
         self.pyboy.stop()        
 
     # REWARDS
-    def calulate_reward(self, obs):
+    def calulate_reward(self, obs, world_state):
         reward = 0
 
-        reward += self.new_map_reward(obs)
-        reward += self.new_tile_reward(obs)
-        reward += self.level_up_reward(obs)
-        reward += self.oaks_parcel_collected(obs)
-        reward += self.pokedex_collected(obs)
-        reward += self.first_badge_collected(obs)
+        reward += self.new_map_reward(obs, world_state)
+        reward += self.new_tile_reward(obs, world_state)
+        reward += self.level_up_reward(obs, world_state)
+        reward += self.oaks_parcel_collected(obs, world_state)
+        reward += self.pokedex_collected(obs, world_state)
+        reward += self.first_badge_collected(obs, world_state)
 
-        reward -= self.standing_still(obs)
+        reward -= self.standing_still(obs, world_state)
 
         return reward
 
 
     #1 reward for new tile
-    def new_tile_reward(self, obs):
+    def new_tile_reward(self, obs, world_state):
         reward = 0
 
-        current_tile = (obs[1], obs[2], obs[3])  # x, y, map
+        current_tile = (world_state["map"], world_state["x"], world_state["y"])  # m, x, y
 
         if not hasattr(self, "visited_tiles"):
             self.visited_tiles = set()
 
         if current_tile not in self.visited_tiles:
             self.visited_tiles.add(current_tile)
-            reward += 0.01  # Reward for visiting a new tile
+            reward += 1  # Reward for visiting a new tile
 
         return reward
     
-    def new_map_reward(self, obs):
+    def new_map_reward(self, obs, world_state):
         reward = 0
 
-        current_map = obs[3]
+        current_map = world_state["map"]
 
         if not hasattr(self, "visited_maps"):
             self.visited_maps = set()
+            self.last_map = None
 
-        if current_map not in self.visited_maps:
-            self.visited_maps.add(current_map)
-            reward += 1  # Reward for visiting a new map
+        if not self.last_map == None and not self.last_map == current_map:
+            link = (self.last_map, current_map)
+            if link not in self.visited_maps:
+                self.visited_maps.add(link)
+                reward += 5  # Reward for visiting a new map
+
+        self.last_map = current_map
 
         return reward
 
     
     #10 reward for pokemon level up
-    def level_up_reward(self, obs):
+    def level_up_reward(self, obs, world_state):
         reward = 0
 
-        indexes = [5, 6, 7, 8, 9, 10]
-
-        current_levels = obs[indexes] # Pokemon levels        
+        current_exp = (
+                world_state["pokemon"][0]["exp"],
+                world_state["pokemon"][1]["exp"],
+                world_state["pokemon"][2]["exp"],
+                world_state["pokemon"][3]["exp"],
+                world_state["pokemon"][4]["exp"],
+                world_state["pokemon"][5]["exp"]
+        ) # Pokemon levels        
 
         if not hasattr(self, "last_levels"):
-            self.last_levels = current_levels
+            self.last_exp = current_exp
 
-        if np.any(current_levels > self.last_levels):
-            reward += 10  # Reward for leveling up
-            self.last_levels = current_levels
+        if np.any(current_exp > self.last_exp):
+            reward += 50  # Reward for leveling up
+            self.last_exp = current_exp
 
         return reward
     
+    #100 reward for catching a new pokemon
+    def catch_pokemon_reward(self, obs, world_state):
+        reward = 0
+
+        if not hasattr(self, "party_size"):
+            self.party_size = world_state["party_size"]
+
+        if world_state["party_size"] > self.party_size:
+            reward = 100
+
+        self.party_size = world_state["party_size"]
+
+        return reward
+
+
     #1000 reward for collecting oaks parcel
-    def oaks_parcel_collected(self, obs):
-        if obs[11] == 1:
+    def oaks_parcel_collected(self, obs, world_state):
+        if not hasattr(self, "milestone_parcel"):
+            self.milestone_parcel = world_state["events"]["oaks_parcel"]
+
+        if world_state["events"]["oaks_parcel"] == True and not self.milestone_parcel:
             return 1000
+        
+        self.milestone_pokedex = world_state["events"]["oaks_parcel"]
+
         return 0
         
-    #1000 reward for collecting pokedex
-    def pokedex_collected(self, obs):
-        if obs[12] == 1:
+    #2000 reward for collecting pokedex
+    def pokedex_collected(self, obs, world_state):
+        if not hasattr(self, "milestone_pokedex"):
+            self.milestone_pokedex = world_state["events"]["pokedex"]
+
+        if world_state["events"]["pokedex"] == True and not self.milestone_pokedex:
             return 2000
+        
+        self.milestone_pokedex = world_state["events"]["pokedex"]
+
         return 0
         
-    #10000 reward for collecting oaks parcel
-    def first_badge_collected(self, obs):
-        if obs[13] == 1:
+    #10000 reward for winning first badge
+    def first_badge_collected(self, obs, world_state):
+        if not hasattr(self, "milestone_badge"):
+            self.milestone_badge = world_state["events"]["brock"]
+
+        if world_state["events"]["brock"] == True and not self.milestone_badge:
             return 10000
+        
+        self.milestone_pokedex = world_state["events"]["brock"]
         return 0
     
-    def standing_still(self, obs):
+    def standing_still(self, obs, world_state):
         reward = 0
-        
-        current_tile = (obs[1], obs[2], obs[3])  # x, y, map
+        memory_size = 20
 
-        if not hasattr(self, "last_places"):
-            self.last_places = []
-        
-        if (len(self.last_places) > 3):
-            counts = self.last_places.count(current_tile)
-            reward = counts * 0.001
-            self.last_places.pop(0)
+        if not world_state["in_battle"] and not world_state["in_dialog"]:
+            current_tile = (world_state["map"], world_state["x"], world_state["y"])   # map, x, y
 
-        self.last_places.append(current_tile)
+            if not hasattr(self, "last_places"):
+                self.last_places = []
+            
+
+
+            if (len(self.last_places) > memory_size):
+                counts = self.last_places.count(current_tile)
+                if counts > (memory_size / 2):
+                    reward = 0.01
+                self.last_places.pop(0)
+
+            self.last_places.append(current_tile)
 
         return reward

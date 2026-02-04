@@ -34,7 +34,7 @@ def emulate(romPath, speed=2, useQuickSaves=True, headless=False):
 
     pyboy = PyBoy(romPath, sound_volume=0, sound_emulated=False, window=window)
     pyboy.set_emulation_speed(speed)    #No speed limit
-
+    
     if useQuickSaves:
         quick_load(pyboy)
 

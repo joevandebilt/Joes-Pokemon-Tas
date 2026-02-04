@@ -1,12 +1,11 @@
 from enum import Enum
 
 class GameboyAction(Enum):
-    NO_OP = 0
-    UP = 1
-    DOWN = 2
-    LEFT = 3
-    RIGHT = 4
-    A = 5
-    B = 6
-    START = 7
-    SELECT = 8
+    UP = 0
+    DOWN = 1
+    LEFT = 2
+    RIGHT = 3
+    A = 4
+    B = 5
+    START = 6
+    SELECT = 7
