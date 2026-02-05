@@ -67,7 +67,9 @@ class PokemonWorldEnv(gym.Env):
             "milestone_parcel",
             "milestone_pokedex",
             "milestone_badge",
-            "last_places"
+            "last_places",
+            "gained_exp",
+            "in_battle"
         ]
 
         for attr in reward_attr:
@@ -127,7 +129,8 @@ class PokemonWorldEnv(gym.Env):
         reward += self.pokedex_collected(obs, world_state)
         reward += self.first_badge_collected(obs, world_state)
 
-        reward -= self.standing_still(obs, world_state)
+        reward -= self.punish_standing_still(obs, world_state)
+        reward -= self.punish_ran_away(obs, world_state)
 
         return reward
 
@@ -182,11 +185,15 @@ class PokemonWorldEnv(gym.Env):
 
         if not hasattr(self, "last_levels"):
             self.last_exp = current_exp
+            self.gained_exp = False
 
         if np.any(current_exp > self.last_exp):
             reward += 50  # Reward for leveling up
             self.last_exp = current_exp
-
+            self.gained_exp = True
+        else:
+            self.gained_exp = False
+            
         return reward
     
     #100 reward for catching a new pokemon
@@ -239,8 +246,8 @@ class PokemonWorldEnv(gym.Env):
         self.milestone_pokedex = world_state["events"]["brock"]
         return 0
     
-    def standing_still(self, obs, world_state):
-        reward = 0
+    def punish_standing_still(self, obs, world_state):
+        punish = 0
         memory_size = 20
 
         if not world_state["in_battle"] and not world_state["in_dialog"]:
@@ -248,15 +255,26 @@ class PokemonWorldEnv(gym.Env):
 
             if not hasattr(self, "last_places"):
                 self.last_places = []
-            
-
 
             if (len(self.last_places) > memory_size):
                 counts = self.last_places.count(current_tile)
                 if counts > (memory_size / 2):
-                    reward = 0.01
+                    punish = 0.01
                 self.last_places.pop(0)
 
             self.last_places.append(current_tile)
 
-        return reward
+        return punish
+    
+    def punish_ran_away(self, obs, world_state):
+        punish = 0
+
+        if not hasattr(self, "in_battle"):
+            self.in_battle = world_state["in_battle"]
+
+        if self.in_battle and not world_state["in_battle"] and not self.gained_exp:
+            punish = 10
+
+        self.in_battle = world_state["in_battle"]
+            
+        return punish

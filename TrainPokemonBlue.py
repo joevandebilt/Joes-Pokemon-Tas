@@ -9,6 +9,9 @@ from learning import pokemon_gymnasium
 
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.vec_env import SubprocVecEnv
+
+'''
 from flask import Flask, jsonify, render_template
 
 app = Flask(__name__)
@@ -29,9 +32,10 @@ def start_webserver():
 
 flask_thread = threading.Thread(target=start_webserver, daemon=True)
 flask_thread.start()
+'''
 
 if __name__ == "__main__":
-    models_dir = "models/PPO"
+    models_dir = "models/PPO_1"
     logdir = "logs"
 
     if not os.path.exists("models"):
@@ -41,42 +45,41 @@ if __name__ == "__main__":
     if not os.path.exists(models_dir):        
         os.makedirs(models_dir)
 
-    run = 0
-    while run < 10:
+    environments = 4   
+
+    env = SubprocVecEnv([ pokemon_gymnasium.MakeGym(seed=i) for i in range(environments) ])
+                            
+
+    checkpoint_callback = CheckpointCallback(
+        save_freq=10000,
+        save_path=models_dir,
+        name_prefix="ppo_model"
+    )
     
-        run += 1
-        print(f"Starting run {run}")
+    model_output_path = os.path.join(models_dir, "ppo_final_model.zip")
 
-        env = pokemon_gymnasium.GetGym()
-
-        checkpoint_callback = CheckpointCallback(
-            save_freq=10000,
-            save_path=models_dir,
-            name_prefix="ppo_model"
+    if os.path.exists(model_output_path):
+        model = PPO.load(
+            model_output_path,
+            env,
+            verbose=1,
+            tensorboard_log=logdir,
+            device="auto"
         )
-        
-        model_output_path = os.path.join(models_dir, "ppo_final_model.zip")
+    else:
+        model = PPO(
+            "MlpPolicy",
+            env,
+            verbose=1,
+            tensorboard_log=logdir,
+            n_steps=2048,
+            batch_size=64,
+            device="auto"
+        )
 
-        if os.path.exists(model_output_path):
-            model = PPO.load(
-                model_output_path,
-                env,
-                verbose=1,
-                tensorboard_log=logdir,
-                device="auto"
-            )
-        else:
-            model = PPO(
-                "MlpPolicy",
-                env,
-                verbose=1,
-                tensorboard_log=logdir,
-                device="auto"
-            )
+    model.learn(total_timesteps=1_000_000, callback=checkpoint_callback)
 
-        model.learn(total_timesteps=1_000_000, callback=checkpoint_callback)
+    model.save(model_output_path)
 
-        model.save(model_output_path)
-
-        env.close()
+    env.close()
 

@@ -43,3 +43,10 @@ def GetGym():
     print("Environment looks good!")
 
     return env
+
+def MakeGym(seed):
+    def _init():
+        env = GetGym()
+        env.reset(seed=seed)
+        return env
+    return _init
