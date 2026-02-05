@@ -13,15 +13,15 @@ class PokemonWorldEnv(gym.Env):
 
     def __init__(self, render_mode=None):
 
-        self.pyboy = Emulator.emulate("roms/Pokemon - Blue Version.gb", 0, False, False)
-
+        self.pyboy = Emulator.emulate("roms/Pokemon - Blue Version.gb", 0, False, True)
+        
         self.render_mode = render_mode
 
         self.action_space = spaces.Discrete(len(GameboyAction))
                
         self.observation_space = spaces.Box(
             low=0,
-            high=255,
+            high=2_147_483_647,
             shape=(5,),
             dtype=np.int32
         )
@@ -102,7 +102,11 @@ class PokemonWorldEnv(gym.Env):
         reward = self.calulate_reward(obs, world_state)
         self.total_reward += reward
 
-        info = {}
+        #world_state["total_reward"] = self.total_reward
+
+        info = {
+            "game_state": world_state,
+        }
 
         if (self.render_mode == "human"):
             self.render()
