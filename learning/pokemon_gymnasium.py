@@ -48,5 +48,6 @@ def MakeGym(seed):
     def _init():
         env = GetGym()
         env.reset(seed=seed)
+        print(f"New seed is {env._np_random_seed}")
         return env
     return _init

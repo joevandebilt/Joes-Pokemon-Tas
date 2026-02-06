@@ -53,11 +53,8 @@ if __name__ == "__main__":
     if not os.path.exists(models_dir):        
         os.makedirs(models_dir)
 
-    environments = 2
-    env =  SubprocVecEnv(
-        [ pokemon_gymnasium.MakeGym(seed=i) for i in range(environments) ],
-        start_method="spawn"
-    )
+    environments = 8
+    env =  SubprocVecEnv([ pokemon_gymnasium.MakeGym(seed=i) for i in range(environments) ])
 
     checkpoint_callback = StateCheckpointCallback(
         save_freq=10000,

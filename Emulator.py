@@ -1,9 +1,12 @@
 import os
+import shutil
 import threading
 import datetime as dt
 
 from pyboy import PyBoy
 from pyboy.utils import WindowEvent
+from pathlib import Path
+from random import randint
 
 from learning.actions import GameboyAction
 
@@ -27,14 +30,19 @@ PyBoyButton = {
 }
 
 def emulate(romPath, speed=2, useQuickSaves=True, headless=False):
-    
     window = "SDL2"
     if headless:
         window = "null"
 
-    pyboy = PyBoy(romPath, sound_volume=0, sound_emulated=False, window=window)
-    pyboy.set_emulation_speed(speed)    #No speed limit
+    seed = randint(0, 9999)
+    workingRomPath = f"{romPath}_{seed}.gb"
     
+    if os.path.exists(romPath) and not os.path.exists(workingRomPath):
+        shutil.copyfile(romPath, workingRomPath)
+
+    pyboy = PyBoy(workingRomPath, sound_volume=0, sound_emulated=False, window=window)
+    pyboy.set_emulation_speed(speed)    #No speed limit
+
     if useQuickSaves:
         quick_load(pyboy)
 
@@ -73,5 +81,16 @@ def press_button(pyboy, button):
     for _ in range(5):
         pyboy.tick(1, True)
     pyboy.send_input(button + 8)  # RELEASE 
+
+def switch_off(pyboy):
+    romPath = pyboy.gamerom
+    ramPath = romPath+'.ram'
+    pyboy.stop()
+    if os.path.exists(romPath):
+        os.remove(romPath)
+    if os.path.exists(ramPath):
+        os.remove(ramPath)
+    
+
     
     

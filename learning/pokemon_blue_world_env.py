@@ -120,7 +120,7 @@ class PokemonWorldEnv(gym.Env):
         return
     
     def close(self):
-        self.pyboy.stop()        
+        Emulator.switch_off(self.pyboy)
 
     # REWARDS
     def calulate_reward(self, obs, world_state):
