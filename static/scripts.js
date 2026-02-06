@@ -12,10 +12,13 @@ async function updateState() {
 
         let index = idx + 1;
 
-        let $environment = $(environment_template);
-
-        let env_key = `env_${index}`;
-        $environment.attr("id", env_key);
+        let env_key = `env-${index}`;
+        let $environment = $(`#${env_key}`);
+        if ($environment.length === 0) {
+            $environment = $(environment_template.replaceAll('env-0', env_key));
+            $environment.attr("id", env_key);
+            $("#app").append($environment);
+        }
 
         let partySize = data.party_count;
 
@@ -25,65 +28,64 @@ async function updateState() {
 
             $environment.removeClass("border-primary");
             $environment.addClass("border-danger");
+        } else {
+            $environment.removeClass("bg-danger-subtle");
+            $environment.addClass("bg-primary-subtle");            
+
+            $environment.removeClass("border-danger");
+            $environment.addClass("border-primary");            
         }
 
-        $environment.find("#location").html(`${getMapName(data.map)}: ${data.x},${data.y}`);
+        $environment.find(".location").html(`${getMapName(data.map)}: ${data.x},${data.y}`);
 
-        $environment.find("#trainer").html(`Environment ${index}: ${data.player_name}`);
-        $environment.find("#trainer-party").html(`Party: ${partySize}/6`);
+        $environment.find(".trainer").html(`Environment ${index}: ${data.player_name}`);
+        $environment.find(".trainer-party").html(`Party: ${partySize}/6`);
 
-        $environment.find("#current_reward").html(`Current Reward: ${data.total_reward}`);
+        $environment.find(".current-reward").html(`Current Reward: ${data.total_reward}`);
 
+        let completed = 0;
         Object.keys(data.events).forEach(key => {
             let $milestone = $environment.find(`#${key}`);
             if ($milestone) {
                 if (data.events[key] == true) {
-                    $milestone.addClass("complete");
+                    $milestone.addClass("text-decoration-line-through");
+                    completed++;
                 } else {
-                    $milestone.removeClass("complete");
+                    $milestone.removeClass("text-decoration-line-through");
                 }
             }
         });
+        $environment.find(".objectives-count").html(`Completed Objectives: ${completed}`);
 
-        if (partySize == 0) {
-            $environment.find("#party").append("<p>No pokemon in Party</p>");
-        }
-        else {
-            for (let i = 0; i < partySize; i++) {
-                let $pokemonDiv = $(party_template);
-                if ($pokemonDiv) {
-                    if (i < partySize) {
-                        let pokemon = data.pokemon[i];
-                        $pokemonDiv.find(".image").attr("src", `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.species.id}.png`);
-                        $pokemonDiv.find(".image").attr("alt", `Image of ${pokemon.species.name}`);
-                        $pokemonDiv.find(".name").html(pokemon.name);
-                        $pokemonDiv.find(".species").html(pokemon.species.name);
-                        $pokemonDiv.find(".level").html(`Lvl: ${pokemon.level}`);
-                        $pokemonDiv.find(".hp").html(`HP: ${pokemon.hp}/${pokemon.max_hp}`);
-                        $pokemonDiv.find(".exp").html(`Exp: ${pokemon.exp}/${pokemon.next_level_exp}`);
-                        for (let j = 0; j < 4; j++) {
-                            let $moveDiv = $pokemonDiv.find(`.move-${j + 1}`);
-                            if (pokemon.moves[j].move.id > 0) {
-                                $moveDiv.html(`${pokemon.moves[j].move.name} (PP: ${pokemon.moves[j].pp})`);
-                                $moveDiv.removeClass("hidden");
-                            } else {
-                                $moveDiv.addClass("hidden");
-                            }
-                        }
-                        $pokemonDiv.removeClass("hidden");
+        for (let i = 0; i < 6; i++) {
+            let slot_key = `env-${index}-slot-${i}`;
+            let $pokemonDiv = $(`#${slot_key}`);
+            if ($pokemonDiv.length === 0) {
+                $pokemonDiv = $(party_template.replaceAll("env-0-slot-0", slot_key));
+                $environment.find(".party").append($pokemonDiv);
+            }
+            if (i < partySize) {
+                let pokemon = data.pokemon[i];
+                $pokemonDiv.find(".image").attr("src", `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.species.id}.png`);
+                $pokemonDiv.find(".image").attr("alt", `Image of ${pokemon.species.name}`);
+                $pokemonDiv.find(".name").html(pokemon.name);
+                $pokemonDiv.find(".species").html(pokemon.species.name);
+                $pokemonDiv.find(".level").html(`Lvl: ${pokemon.level}`);
+                $pokemonDiv.find(".hp").html(`HP: ${pokemon.hp}/${pokemon.max_hp}`);
+                $pokemonDiv.find(".exp").html(`Exp: ${pokemon.exp}/${pokemon.next_level_exp}`);
+                for (let j = 0; j < 4; j++) {
+                    let $moveDiv = $pokemonDiv.find(`.move-${j + 1}`);
+                    if (pokemon.moves[j].move.id > 0) {
+                        $moveDiv.html(`${pokemon.moves[j].move.name} (PP: ${pokemon.moves[j].pp})`);
+                        $moveDiv.removeClass("hidden");
                     } else {
-                        $pokemonDiv.addClass("hidden");
+                        $moveDiv.addClass("hidden");
                     }
                 }
-                $environment.find("#party").append($pokemonDiv);
+                $pokemonDiv.removeClass("hidden");
+            } else {
+                $pokemonDiv.addClass("hidden");
             }
-        }
-
-        let $env = $(`#${env_key}`);
-        if ($env.length > 0) {
-            $env.replaceWith($environment);
-        } else {
-            $("#app").append($environment);
         }
     });
 

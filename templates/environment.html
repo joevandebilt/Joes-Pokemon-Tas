@@ -1,37 +1,61 @@
-<div class="environment w-45 m-3 p-2 bg-primary-subtle border border-primary" id="env_0">
-    <h3 id="trainer"></h2>
-    <p id="current_reward"></p>
-    <h5>Current Location</h5>
-    <p id="location"></p>
-    <h5>Objectives</h5>
-    <div id="objectives-container" class="m0 d-flex flex-row justify-content-between">
-        <ul id="milestone-objectives">
-            <li id="oaks-parcel">Oak's Parcel</li>
-            <li id="pokedex">Pokedex</li>
-            <li id="town-map">Town Map</li>
-            <li id="ss-anne">SS Anne</li>
-        </ul>
-        <ul id="badges">
-            <li id="brock">Brock</li>
-            <li id="misty">Misty</li>
-            <li id="surge">Surge</li>
-            <li id="erika">Erika</li>
-            <li id="koga">Koga</li>
-            <li id="sabrina">Sabrina</li>
-            <li id="blaine">Blaine</li>
-            <li id="giovanni">Giovanni</li>
-        </ul>
-        <ul id="pokemon">
-            <li id="snorlax">Snorlax</li>
-            <li id="articuno">Articuno</li>
-            <li id="zapdos">Zapdos</li>
-            <li id="moltres">Moltres</li>
-            <li id="mewtwo">Mewtwo</li>
-            <li id="mew">Mew</li>
-        </ul>
-    </div>
-            
-    <h5 id="trainer-party"></h5>
+<div class="environment w-45 m-3 bg-primary-subtle border border-primary" id="env-0">
+    <ul class="nav nav-pills nav-tabs nav-fill nav-justified fw-bold" id="env-0-tablist" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="env-0-status-tab" data-bs-toggle="tab" data-bs-target="#env-0-status-tab-pane" type="button" role="tab" aria-controls="env-0-status-tab-pane" aria-selected="true">Status</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="env-0-party-tab" data-bs-toggle="tab" data-bs-target="#env-0-party-tab-pane" type="button" role="tab" aria-controls="env-0-party-tab-pane" aria-selected="true">Party</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="env-0-objectives-tab" data-bs-toggle="tab" data-bs-target="#env-0-objectives-tab-pane" type="button" role="tab" aria-controls="env-0-objectives-tab-pane" aria-selected="true">Objectives</button>
+        </li>
+    </ul>
 
-    <div id="party" class="d-flex flex-row flex-wrap justify-content-start"></div>
+    <div class="tab-content p-2" id="env-0-tabcontent">
+        <h3 class="trainer"></h2>
+        <div class="tab-pane fade show active" id="env-0-status-tab-pane" role="tabpanel" aria-labelledby="env-0-status-tab" tabindex="0">
+            <h5>Current Reward</h5>
+            <p class="current-reward"></p>
+            <h5>Current Location</h5>
+            <p class="location"></p>
+            <h5>Party Size</h5>
+            <p class="trainer-party"></p>
+            <h5>Objectives</h5>
+            <p class="objectives-count"></p>
+        </div>
+        <div class="tab-pane fade show" id="env-0-party-tab-pane" role="tabpanel" aria-labelledby="env-0-party-tab" tabindex="0">            
+            <h5 class="trainer-party"></h5>
+            <div class="party d-flex flex-row flex-wrap justify-content-start"></div>
+        </div>
+        <div class="tab-pane fade show" id="env-0-objectives-tab-pane" role="tabpanel" aria-labelledby="env-0-objectives-tab" tabindex="0">            
+            <h5>Objectives</h5>
+            <div class="objectives-container m0 d-flex flex-row justify-content-around">
+                <ul id="milestone-objectives">
+                    <li id="allow_starter">Choose first starter</li>
+                    <li id="oaks_parcel">Oak's Parcel</li>
+                    <li id="pokedex">Pokedex</li>
+                    <li id="town_map">Town Map</li>
+                    <li id="ss_anne">SS Anne</li>
+                </ul>
+                <ul id="badges">
+                    <li id="brock">Brock</li>
+                    <li id="misty">Misty</li>
+                    <li id="surge">Surge</li>
+                    <li id="erika">Erika</li>
+                    <li id="koga">Koga</li>
+                    <li id="sabrina">Sabrina</li>
+                    <li id="blaine">Blaine</li>
+                    <li id="giovanni">Giovanni</li>
+                </ul>
+                <ul id="pokemon">
+                    <li id="snorlax">Snorlax</li>
+                    <li id="articuno">Articuno</li>
+                    <li id="zapdos">Zapdos</li>
+                    <li id="moltres">Moltres</li>
+                    <li id="mewtwo">Mewtwo</li>
+                    <li id="mew">Mew</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>

@@ -22,7 +22,7 @@ class PokemonWorldEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=0,
             high=2_147_483_647,
-            shape=(5,),
+            shape=(9,),
             dtype=np.int32
         )
 
@@ -45,9 +45,10 @@ class PokemonWorldEnv(gym.Env):
             #world_state["pokemon"][3]["exp"],
             #world_state["pokemon"][4]["exp"],
             #world_state["pokemon"][5]["exp"],
-            #world_state["events"]["oaks_parcel"],
-            #world_state["events"]["pokedex"],
-            #world_state["events"]["brock"],
+            world_state["events"]["allow_starter"],
+            world_state["events"]["oaks_parcel"],
+            world_state["events"]["pokedex"],
+            world_state["events"]["brock"],
         ], dtype=np.int32)
 
         return obs, world_state
@@ -64,6 +65,7 @@ class PokemonWorldEnv(gym.Env):
             "visited_maps",
             "last_levels",
             "party_size",
+            "milestone_starter",
             "milestone_parcel",
             "milestone_pokedex",
             "milestone_badge",
@@ -129,6 +131,7 @@ class PokemonWorldEnv(gym.Env):
         reward += self.new_map_reward(obs, world_state)
         reward += self.new_tile_reward(obs, world_state)
         reward += self.level_up_reward(obs, world_state)
+        reward += self.choose_starter(obs, world_state)
         reward += self.oaks_parcel_collected(obs, world_state)
         reward += self.pokedex_collected(obs, world_state)
         reward += self.first_badge_collected(obs, world_state)
@@ -215,40 +218,56 @@ class PokemonWorldEnv(gym.Env):
         return reward
 
 
+    #250 reward for getting past the autowalk section
+    def choose_starter(self, obs, world_state):
+        reward = 0
+        if not hasattr(self, "milestone_starter"):
+            self.milestone_starter = world_state["events"]["allow_starter"]
+
+        if world_state["events"]["allow_starter"] == True and not self.milestone_starter:
+            reward = 250
+        
+        self.milestone_starter = world_state["events"]["allow_starter"]
+
+        return reward
+
     #1000 reward for collecting oaks parcel
     def oaks_parcel_collected(self, obs, world_state):
+        reward = 0
         if not hasattr(self, "milestone_parcel"):
             self.milestone_parcel = world_state["events"]["oaks_parcel"]
 
         if world_state["events"]["oaks_parcel"] == True and not self.milestone_parcel:
-            return 1000
+            reward = 1000
         
         self.milestone_pokedex = world_state["events"]["oaks_parcel"]
 
-        return 0
+        return reward
         
     #2000 reward for collecting pokedex
     def pokedex_collected(self, obs, world_state):
+        reward = 0
         if not hasattr(self, "milestone_pokedex"):
             self.milestone_pokedex = world_state["events"]["pokedex"]
 
         if world_state["events"]["pokedex"] == True and not self.milestone_pokedex:
-            return 2000
+            reward = 2000
         
         self.milestone_pokedex = world_state["events"]["pokedex"]
 
-        return 0
+        return reward
         
     #10000 reward for winning first badge
     def first_badge_collected(self, obs, world_state):
+        reward = 0
         if not hasattr(self, "milestone_badge"):
             self.milestone_badge = world_state["events"]["brock"]
 
         if world_state["events"]["brock"] == True and not self.milestone_badge:
-            return 10000
+            reward = 10000
         
         self.milestone_pokedex = world_state["events"]["brock"]
-        return 0
+        return reward
     
     def punish_standing_still(self, obs, world_state):
         punish = 0

@@ -1,14 +1,17 @@
 <head>
     <title>Pokemon Emulator API</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 <body>
     <div class="container-xxl">
+        <h3>Environments</h3>
         <div id="app" class="d-flex flex-row flex-wrap">
         </div>
         <h3>Raw Data</h3>
         <p>Pokemon Emulator API is running. Access <a href="/state" target="_blank">/state</a> for game state.</p>
-        <pre id="status"></pre>
+        <div class="bg-secondary bg-opacity-50 border border-dark border-3 p-1">
+            <pre id="status"></pre>
+        </div>
     </div>
     <script type="text/javascript">
         const state_url = "{{ url_for('state') }}";

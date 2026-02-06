@@ -1,3 +1,7 @@
+.hidden {
+    display: none !important;
+}
+
 .w-33 {
     width: 33% !important;
     max-width: 33% !important;
@@ -14,4 +18,17 @@
 
 #objectives-container li.complete {
     text-decoration: line-through;
+}
+
+.nav-pills .nav-link {
+    border-radius: 0;
+}
+.nav-tabs .nav-link {
+    border: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.environment {
+    transition: transform 300ms ease;
 }
