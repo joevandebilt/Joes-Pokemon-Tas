@@ -32,3 +32,12 @@
 .environment {
     transition: transform 300ms ease;
 }
+
+.fixed-right {
+    right: 0 !important;
+    left: auto;
+}
+
+.objectives-container ul {
+    padding-left: 0;
+}

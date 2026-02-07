@@ -3,6 +3,7 @@ from stable_baselines3.common.callbacks import CheckpointCallback
 class StateCheckpointCallback(CheckpointCallback):
     def __init__(self, save_freq, save_path, name_prefix):
         super().__init__(save_freq=save_freq, save_path=save_path, name_prefix=name_prefix)
+        self.latest_states = []
 
     def _on_step(self) -> bool:
         

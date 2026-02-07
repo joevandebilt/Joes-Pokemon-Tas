@@ -1,4 +1,4 @@
-from memory_maps.static_data.pokemon_data import POKEMON_CHAR_MAP, POKEMON_ID_TO_NAME, POKEMON_MOVES
+from memory_maps.static_data.pokemon_data import POKEMON_CHAR_MAP, POKEMON_ID_TO_NAME, POKEMON_MOVES, MAP_NAMES
 
 def read_game_state(pyboy):
     data = {
@@ -126,7 +126,9 @@ def read_game_state(pyboy):
             pokemon["next_level_exp"] = pokemon["exp"]
         else:
             pokemon["next_level_exp"] = exp_for_level(pokemon["level"], pokemon["species"].get("growth", "medium_fast"))
-            
+    
+    data["map_name"] = MAP_NAMES.get(data["map"], "Unknown Map")
+
     return data
 
 def read_pokemon_string(pyboy, start_addr, max_len=16):

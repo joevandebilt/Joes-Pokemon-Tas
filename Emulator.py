@@ -78,7 +78,7 @@ def load_specific_state(pyboy, stateName):
 
 def press_button(pyboy, button):
     pyboy.send_input(button)
-    for _ in range(5):
+    for _ in range(24):
         pyboy.tick(1, True)
     pyboy.send_input(button + 8)  # RELEASE 
 

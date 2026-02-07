@@ -39,12 +39,14 @@ class PokemonWorldEnv(gym.Env):
             world_state["y"],
             world_state["map"],
             #world_state["party_count"],
-            world_state["pokemon"][0]["exp"],
-            #world_state["pokemon"][1]["exp"],
-            #world_state["pokemon"][2]["exp"],
-            #world_state["pokemon"][3]["exp"],
-            #world_state["pokemon"][4]["exp"],
-            #world_state["pokemon"][5]["exp"],
+            (
+                world_state["pokemon"][0]["exp"]+
+                world_state["pokemon"][1]["exp"]+
+                world_state["pokemon"][2]["exp"]+
+                world_state["pokemon"][3]["exp"]+
+                world_state["pokemon"][4]["exp"]+
+                world_state["pokemon"][5]["exp"]
+            ),
             world_state["events"]["allow_starter"],
             world_state["events"]["oaks_parcel"],
             world_state["events"]["pokedex"],
@@ -60,7 +62,6 @@ class PokemonWorldEnv(gym.Env):
 
         #clear reward trackers
         reward_attr = [
-            "visited_tiles",
             "visited_tiles",
             "visited_maps",
             "last_levels",
@@ -157,6 +158,7 @@ class PokemonWorldEnv(gym.Env):
 
         return reward
     
+    #3 reward for visiting a new map
     def new_map_reward(self, obs, world_state):
         reward = 0
 
@@ -170,14 +172,14 @@ class PokemonWorldEnv(gym.Env):
             link = (self.last_map, current_map)
             if link not in self.visited_maps:
                 self.visited_maps.add(link)
-                reward += 5  # Reward for visiting a new map
+                reward += 3  
 
         self.last_map = current_map
 
         return reward
 
     
-    #10 reward for pokemon level up
+    #3 reward for pokemon level up
     def level_up_reward(self, obs, world_state):
         reward = 0
 
@@ -195,7 +197,7 @@ class PokemonWorldEnv(gym.Env):
             self.gained_exp = False
 
         if np.any(current_exp > self.last_exp):
-            reward += 50  # Reward for leveling up
+            reward += 3  # Reward for leveling up
             self.last_exp = current_exp
             self.gained_exp = True
         else:
@@ -203,7 +205,7 @@ class PokemonWorldEnv(gym.Env):
             
         return reward
     
-    #100 reward for catching a new pokemon
+    #3 reward for catching a new pokemon
     def catch_pokemon_reward(self, obs, world_state):
         reward = 0
 
@@ -211,47 +213,49 @@ class PokemonWorldEnv(gym.Env):
             self.party_size = world_state["party_size"]
 
         if world_state["party_size"] > self.party_size:
-            reward = 100
+            reward = 3
 
         self.party_size = world_state["party_size"]
 
         return reward
 
 
-    #250 reward for getting past the autowalk section
+    #5 reward for getting past the autowalk section
     def choose_starter(self, obs, world_state):
         reward = 0
         if not hasattr(self, "milestone_starter"):
             self.milestone_starter = world_state["events"]["allow_starter"]
 
         if world_state["events"]["allow_starter"] == True and not self.milestone_starter:
-            reward = 250
+            reward = 5
         
         self.milestone_starter = world_state["events"]["allow_starter"]
 
         return reward
 
-    #1000 reward for collecting oaks parcel
+    #5 reward for collecting oaks parcel
     def oaks_parcel_collected(self, obs, world_state):
         reward = 0
         if not hasattr(self, "milestone_parcel"):
             self.milestone_parcel = world_state["events"]["oaks_parcel"]
 
         if world_state["events"]["oaks_parcel"] == True and not self.milestone_parcel:
-            reward = 1000
+            reward = 5
+            self.visited_tiles = set()
+            self.visited_maps = set()
         
         self.milestone_pokedex = world_state["events"]["oaks_parcel"]
 
         return reward
         
-    #2000 reward for collecting pokedex
+    #10 reward for collecting pokedex
     def pokedex_collected(self, obs, world_state):
         reward = 0
         if not hasattr(self, "milestone_pokedex"):
             self.milestone_pokedex = world_state["events"]["pokedex"]
 
         if world_state["events"]["pokedex"] == True and not self.milestone_pokedex:
-            reward = 2000
+            reward = 10
         
         self.milestone_pokedex = world_state["events"]["pokedex"]
 
@@ -296,7 +300,7 @@ class PokemonWorldEnv(gym.Env):
             self.in_battle = world_state["in_battle"]
 
         if self.in_battle and not world_state["in_battle"] and not self.gained_exp:
-            punish = 10
+            punish = 1
 
         self.in_battle = world_state["in_battle"]
             
