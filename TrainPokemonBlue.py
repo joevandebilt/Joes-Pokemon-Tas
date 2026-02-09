@@ -56,17 +56,17 @@ if __name__ == "__main__":
         os.makedirs("models")
     if not os.path.exists(logdir):
         os.makedirs(logdir)
-    if not os.path.exists(models_dir):        
+    if not os.path.exists(models_dir):
         os.makedirs(models_dir)
 
     while not quit_learning:
-        environments = 32
+        environments = 4
         env =  SubprocVecEnv([ pokemon_gymnasium.MakeGym(seed=i) for i in range(environments) ])
 
         checkpoint_callback = StateCheckpointCallback(
             save_freq=10000,
             save_path=models_dir,
-            name_prefix="ppo_model_1",
+            name_prefix="ppo_model",
         )
         
         model_output_path = os.path.join(models_dir, "ppo_final_model.zip")
@@ -90,7 +90,7 @@ if __name__ == "__main__":
                 device="auto"
             )
 
-        model.learn(total_timesteps=1_000_000, callback=checkpoint_callback)
+        model.learn(total_timesteps=200_000, callback=checkpoint_callback)
 
         model.save(model_output_path)
 

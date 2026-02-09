@@ -9,10 +9,14 @@ class StateCheckpointCallback(CheckpointCallback):
         
         infos = self.locals["infos"]
         self.latest_states = []
-        env_rewards = self.training_env.get_attr("total_reward")
 
+        #if hasattr(self.training_env, "total_reward") and hasattr(self.training_env, "reward_events"):
+        env_rewards = self.training_env.get_attr("total_reward")
+        reward_logs = self.training_env.get_attr("reward_events")
+    
         for i, info in enumerate(infos):
             if "game_state" in info:                
                 info["game_state"]["total_reward"] = env_rewards[i]
+                info["game_state"]["reward_logs"] = reward_logs[i]
                 self.latest_states.append(info["game_state"])
         return True

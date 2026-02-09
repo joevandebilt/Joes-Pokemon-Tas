@@ -27,29 +27,19 @@ async function updateState() {
 
         let partySize = data.party_count;
 
-        if (data.in_battle) {
-            $environment.removeClass("bg-primary-subtle");
-            $environment.removeClass("bg-warning-subtle");
+        //Remove styling
+        $environment.removeClassStartingWith("bg-").removeClassStartingWith("border-");
+        if (data.in_wild_battle) {
+            $environment.addClass("bg-warning-subtle");
+            $environment.addClass("border-warning");
+        } else if (data.in_trainer_battle) {
             $environment.addClass("bg-danger-subtle");
-
-            $environment.removeClass("border-primary");
-            $environment.removeClass("border-warning");
             $environment.addClass("border-danger");
         } else if (data.in_dialog) {
-            $environment.removeClass("bg-primary-subtle");
-            $environment.removeClass("bg-danger-subtle");
-            $environment.addClass("bg-warning-subtle");
-
-            $environment.removeClass("border-primary");
-            $environment.removeClass("border-danger");
-            $environment.addClass("border-warning");
+            $environment.addClass("bg-success-subtle");
+            $environment.addClass("border-success");
         } else {
-            $environment.removeClass("bg-danger-subtle");
-            $environment.removeClass("bg-warning-subtle");
             $environment.addClass("bg-primary-subtle");
-
-            $environment.removeClass("border-danger");
-            $environment.removeClass("border-warning");
             $environment.addClass("border-primary");
         }
 
@@ -105,6 +95,11 @@ async function updateState() {
                 $pokemonDiv.addClass("hidden");
             }
         }
+
+        data.reward_logs.forEach((reward_log, idx) => {            
+            if ($environment.find(`[data-event-idx='${idx}'`).length === 0)
+                $environment.find(".rewards").prepend(`<p class='text-small mb-0' data-event-idx="${idx}">${reward_log.reward} - ${reward_log.message}</p>`)
+        });
     });
 
     reorderEnvironments();
@@ -174,3 +169,12 @@ async function toggleQuit() {
 
 updateState();
 setInterval(updateState, 5000);
+
+$(document).ready(() => {
+    $.fn.removeClassStartingWith = function (filter) {
+        $(this).removeClass(function (index, className) {
+            return (className.match(new RegExp("\\S*" + filter + "\\S*", 'g')) || []).join(' ')
+        });
+        return this;
+    }
+});

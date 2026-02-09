@@ -8,7 +8,7 @@ from flask import Flask, jsonify, render_template
 from flask import Flask, jsonify, render_template
 
 app = Flask(__name__)
-checkpoint_callback = None
+latest_state = {}
 
 @app.route("/")
 def index():
@@ -26,6 +26,13 @@ def party_template():
 def state():
     global latest_state
     return jsonify([latest_state])
+
+
+@app.route("/quit-toggle")
+def quit_toggle():
+    global quit_learning
+    quit_learning = not quit_learning
+    return jsonify(success=True, quitting=quit_learning)
 
 def start_webserver():
     app.run(port=5000)

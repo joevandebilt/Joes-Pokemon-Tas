@@ -8,7 +8,10 @@ def read_game_state(pyboy):
         "player_name": read_pokemon_string(pyboy, 0xD158, 4),
         "player_id": pyboy.memory[0xD359],
         "in_battle": pyboy.memory[0xD057] != 0,
+        "in_wild_battle": pyboy.memory[0xD057] == 1,
+        "in_trainer_battle": pyboy.memory[0xD057] == 2,
         "in_dialog": pyboy.memory[0xD730] != 0,
+        "damage_dealt": pyboy.memory[0xD0D8],
         "events":{
             "allow_starter": pyboy.memory[0xD747] != 0,
             "oaks_parcel": (pyboy.memory[0xD60D] != 0) or ((pyboy.memory[0xD74E] & 0x01) != 0),
@@ -153,7 +156,7 @@ def read_u16(pyboy, addr):
 def read_species(pyboy, addr):
     return POKEMON_ID_TO_NAME.get(pyboy.memory[addr], "Unknown")
 
-def read_exp(pyboy, addr):    
+def read_exp(pyboy, addr):
     return int.from_bytes(
         bytes(pyboy.memory[addr:addr+3]),
         "big"

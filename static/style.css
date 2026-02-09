@@ -31,6 +31,7 @@
 
 .environment {
     transition: transform 300ms ease;
+    max-height: 400px;
 }
 
 .fixed-right {
@@ -40,4 +41,10 @@
 
 .objectives-container ul {
     padding-left: 0;
+}
+
+.rewards {
+    overflow: auto;
+    height: 255px;
+    max-height: 255px;
 }
