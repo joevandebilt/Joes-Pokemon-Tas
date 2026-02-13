@@ -49,7 +49,7 @@ flask_thread = threading.Thread(target=start_webserver, daemon=True)
 flask_thread.start()
 
 if __name__ == "__main__":
-    models_dir = "models/PPO"
+    models_dir = "models/PPO_1"
     logdir = "logs"
 
     if not os.path.exists("models"):
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         os.makedirs(models_dir)
 
     while not quit_learning:
-        environments = 4
+        environments = 8
         env =  SubprocVecEnv([ pokemon_gymnasium.MakeGym(seed=i) for i in range(environments) ])
 
         checkpoint_callback = StateCheckpointCallback(
@@ -90,7 +90,7 @@ if __name__ == "__main__":
                 device="auto"
             )
 
-        model.learn(total_timesteps=200_000, callback=checkpoint_callback)
+        model.learn(total_timesteps=1_000_000, callback=checkpoint_callback)
 
         model.save(model_output_path)
 

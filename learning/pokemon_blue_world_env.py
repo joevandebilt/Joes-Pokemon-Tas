@@ -13,7 +13,8 @@ class PokemonWorldEnv(gym.Env):
     
     def __init__(self, render_mode=None):
 
-        self.pyboy = Emulator.emulate("roms/Pokemon - Blue Version.gb", 0, False, False)
+        self.headless_running = True
+        self.pyboy = Emulator.emulate("roms/Pokemon - Blue Version.gb", 0, False, self.headless_running)
         
         self.render_mode = render_mode
 
@@ -85,7 +86,7 @@ class PokemonWorldEnv(gym.Env):
 
     def perform_action(self, action: GameboyAction):
         button = Emulator.PyBoyButton.get(action)
-        Emulator.press_button(self.pyboy, button)
+        Emulator.press_button(self.pyboy, button, not self.headless_running)
     
     def step(self, action):
         action_enum = GameboyAction(action)
@@ -184,8 +185,8 @@ class PokemonWorldEnv(gym.Env):
         reward += self.badges_collected(world_state)
         reward += self.healed_when_needed(world_state)
 
-        reward -= self.punish_standing_still(world_state)
-        reward -= self.punish_ran_away(world_state)
+        #reward -= self.punish_standing_still(world_state)
+        reward -= self.battle_ended_result(world_state)
 
         return reward
 
@@ -234,9 +235,6 @@ class PokemonWorldEnv(gym.Env):
         if not self.in_trainer_battle and in_trainer_battle:
             reward = 0.02
             self.log_reward(reward, f"Started Trainer Battle")
-        elif  self.in_trainer_battle and not in_trainer_battle:
-            reward = 0.05
-            self.log_reward(reward, f"Finished Trainer Battle")
 
         self.in_trainer_battle = in_trainer_battle
 
@@ -364,8 +362,8 @@ class PokemonWorldEnv(gym.Env):
 
         return punish
     
-    def punish_ran_away(self, world_state):
-        punish = 0
+    def battle_ended_result(self, world_state):
+        outcome = 0
        
         current_exp = self.get_total_exp(world_state)
         if not self.in_battle and world_state["in_battle"]:
@@ -373,10 +371,15 @@ class PokemonWorldEnv(gym.Env):
             self.pre_battle_exp = current_exp
         elif self.in_battle and not world_state["in_battle"]:
             #battle ended            
-            if self.pre_battle_exp == current_exp:
-                punish = 0.02
-                self.log_reward(punish*-1, f"Battle ended with 0 EXP Gained ({self.pre_battle_exp}->{current_exp})")
+            exp_change = current_exp - self.pre_battle_exp
+            if exp_change == 0:
+                #Lost battle (or ran)
+                outcome = -0.02
+            else:
+                #Won battle
+                outcome = 0.05
+            self.log_reward(outcome, f"Battle ended with {exp_change} EXP Gained ({self.pre_battle_exp}->{current_exp})")
 
         self.in_battle = world_state["in_battle"]
             
-        return punish
+        return outcome

@@ -76,11 +76,11 @@ def load_specific_state(pyboy, stateName):
     with open(filepath, "rb") as f:
         pyboy.load_state(f)
 
-def press_button(pyboy, button):
+def press_button(pyboy, button, render=False):
     pyboy.send_input(button)
-    for _ in range(24):
-        pyboy.tick(1, True)
+    pyboy.tick(30, render)
     pyboy.send_input(button + 8)  # RELEASE 
+    pyboy.tick(30, render)
 
 def switch_off(pyboy):
     romPath = pyboy.gamerom

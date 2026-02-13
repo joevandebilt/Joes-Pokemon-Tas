@@ -96,9 +96,14 @@ async function updateState() {
             }
         }
 
+        let maxIdx = data.reward_logs.length-1;
+        $environment.find(["data-event-idx"]).each((elm) => {
+            if (parseInt($(elem).attr("data-event-idx")) > maxIdx)
+                $(elm).remove();
+        });
         data.reward_logs.forEach((reward_log, idx) => {            
             if ($environment.find(`[data-event-idx='${idx}'`).length === 0)
-                $environment.find(".rewards").prepend(`<p class='text-small mb-0' data-event-idx="${idx}">${reward_log.reward} - ${reward_log.message}</p>`)
+                $environment.find(".rewards").prepend(`<p class='text-small mb-0' data-event-idx="${idx}">[${reward_log.steps}] ${reward_log.reward} - ${reward_log.message}</p>`)
         });
     });
 
