@@ -60,7 +60,7 @@ if __name__ == "__main__":
         os.makedirs(models_dir)
 
     while not quit_learning:
-        environments = 8
+        environments = 64
         env =  SubprocVecEnv([ pokemon_gymnasium.MakeGym(seed=i) for i in range(environments) ])
 
         checkpoint_callback = StateCheckpointCallback(
