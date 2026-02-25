@@ -1,5 +1,6 @@
 
 import os
+import torch
 import threading
 import gymnasium as gym
 import memory_maps.pokemon_red_blue as mm
@@ -59,6 +60,10 @@ if __name__ == "__main__":
     if not os.path.exists(models_dir):
         os.makedirs(models_dir)
 
+    device = "auto"
+    if torch.cuda.is_available():
+        device = "cuda"
+
     while not quit_learning:
         environments = 64
         env =  SubprocVecEnv([ pokemon_gymnasium.MakeGym(seed=i) for i in range(environments) ])
@@ -77,7 +82,7 @@ if __name__ == "__main__":
                 env,
                 verbose=1,
                 tensorboard_log=logdir,
-                device="auto"
+                device=device
             )
         else:
             model = PPO(
@@ -87,7 +92,7 @@ if __name__ == "__main__":
                 tensorboard_log=logdir,
                 n_steps=2048,
                 batch_size=64,
-                device="auto"
+                device=device
             )
 
         model.learn(total_timesteps=1_000_000, callback=checkpoint_callback)
