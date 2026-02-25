@@ -1,6 +1,5 @@
 
 import os
-import torch
 import threading
 import gymnasium as gym
 import memory_maps.pokemon_red_blue as mm
@@ -50,7 +49,7 @@ flask_thread = threading.Thread(target=start_webserver, daemon=True)
 flask_thread.start()
 
 if __name__ == "__main__":
-    models_dir = "models/PPO_1"
+    models_dir = "models/PPO_2"
     logdir = "logs"
 
     if not os.path.exists("models"):
@@ -59,13 +58,9 @@ if __name__ == "__main__":
         os.makedirs(logdir)
     if not os.path.exists(models_dir):
         os.makedirs(models_dir)
-
-    device = "auto"
-    if torch.cuda.is_available():
-        device = "cuda"
-
+ 
     while not quit_learning:
-        environments = 32
+        environments = 64
         env =  SubprocVecEnv([ pokemon_gymnasium.MakeGym(seed=i) for i in range(environments) ])
 
         checkpoint_callback = StateCheckpointCallback(
@@ -82,7 +77,7 @@ if __name__ == "__main__":
                 env,
                 verbose=1,
                 tensorboard_log=logdir,
-                device=device
+                device="cpu"
             )
         else:
             model = PPO(
@@ -92,7 +87,7 @@ if __name__ == "__main__":
                 tensorboard_log=logdir,
                 n_steps=2048,
                 batch_size=64,
-                device=device
+                device="cpu"
             )
 
         model.learn(total_timesteps=1_000_000, callback=checkpoint_callback)

@@ -1,5 +1,6 @@
 import gymnasium as gym
 from gymnasium import spaces
+from collections import defaultdict
 from learning.actions import GameboyAction
 from memory_maps.static_data.pokemon_data import MAP_NAMES
 
@@ -65,7 +66,7 @@ class PokemonWorldEnv(gym.Env):
         return obs, info
     
     def _reset_reward_state(self):
-        self.visited_tiles = set()
+        self.tile_counts = defaultdict(int)
         self.visited_maps = set()
         self.last_places = []
         self.last_map = None
@@ -200,18 +201,17 @@ class PokemonWorldEnv(gym.Env):
         self.reward_events.append(log)
         
 
-    #1 reward for new tile
+    #Diminishing reward for tiles
     def new_tile_reward(self, world_state):
         reward = 0
+        if not world_state["in_battle"]:
+            current_tile = (world_state["map"], world_state["x"], world_state["y"])  # m, x, y
 
-        current_tile = (world_state["map"], world_state["x"], world_state["y"])  # m, x, y
-
-        if current_tile not in self.visited_tiles:
-            self.visited_tiles.add(current_tile)
-            reward += 0.01  # Reward for visiting a new tile
-
+            self.tile_counts[current_tile] += 1
+            reward = 0.01 / np.sqrt(self.tile_counts[current_tile])
         return reward
     
+
     def new_map_reward(self, world_state):
         reward = 0
 
@@ -221,7 +221,7 @@ class PokemonWorldEnv(gym.Env):
             link = (self.last_map, current_map)
             if link not in self.visited_maps:
                 self.visited_maps.add(link)
-                reward += 0.03
+                reward += 0.01
                 self.log_reward(reward, f"Found connection between {MAP_NAMES.get(self.last_map)} and {MAP_NAMES.get(current_map)}")
 
         self.last_map = current_map
@@ -246,7 +246,7 @@ class PokemonWorldEnv(gym.Env):
         if world_state["in_battle"]:
             damage_dealt = world_state["damage_dealt"]
             if damage_dealt > 0 and not self.damage_dealt == damage_dealt:
-                reward = 0.02
+                reward = 0.02 
                 self.damage_dealt = damage_dealt
                 self.log_reward(reward, f"Dealt {damage_dealt}hp damage in battle")
 
@@ -333,7 +333,6 @@ class PokemonWorldEnv(gym.Env):
 
         return reward
         
-    #10000 reward for winning first badge
     def badges_collected(self, world_state):
         reward = 0
 
@@ -373,11 +372,15 @@ class PokemonWorldEnv(gym.Env):
             #battle ended            
             exp_change = current_exp - self.pre_battle_exp
             if exp_change == 0:
-                #Lost battle (or ran)
-                outcome = -0.02
+                if world_state["in_trainer_battle"]:
+                    #Lost battle
+                    outcome = -0.2
+                else:
+                    #Ran battle (or died?)
+                    outcome = -0.1
             else:
                 #Won battle
-                outcome = 0.05
+                outcome = 0.1
             self.log_reward(outcome, f"Battle ended with {exp_change} EXP Gained ({self.pre_battle_exp}->{current_exp})")
 
         self.in_battle = world_state["in_battle"]
