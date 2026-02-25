@@ -65,7 +65,7 @@ if __name__ == "__main__":
         device = "cuda"
 
     while not quit_learning:
-        environments = 64
+        environments = 32
         env =  SubprocVecEnv([ pokemon_gymnasium.MakeGym(seed=i) for i in range(environments) ])
 
         checkpoint_callback = StateCheckpointCallback(
