@@ -186,7 +186,7 @@ class PokemonWorldEnv(gym.Env):
         reward += self.badges_collected(world_state)
         reward += self.healed_when_needed(world_state)
 
-        #reward -= self.punish_standing_still(world_state)
+        reward -= self.punish_standing_still(world_state)
         reward -= self.battle_ended_result(world_state)
 
         return reward
@@ -208,7 +208,8 @@ class PokemonWorldEnv(gym.Env):
             current_tile = (world_state["map"], world_state["x"], world_state["y"])  # m, x, y
 
             self.tile_counts[current_tile] += 1
-            reward = 0.01 / np.sqrt(self.tile_counts[current_tile])
+            count = self.tile_counts[current_tile]
+            reward = 0.01 / np.sqrt(count) if count <= 10 else 0.0
         return reward
     
 
@@ -221,7 +222,7 @@ class PokemonWorldEnv(gym.Env):
             link = (self.last_map, current_map)
             if link not in self.visited_maps:
                 self.visited_maps.add(link)
-                reward += 0.01
+                reward += 0.1
                 self.log_reward(reward, f"Found connection between {MAP_NAMES.get(self.last_map)} and {MAP_NAMES.get(current_map)}")
 
         self.last_map = current_map
@@ -313,7 +314,7 @@ class PokemonWorldEnv(gym.Env):
 
         if world_state["events"]["oaks_parcel"] == True and not self.milestone_parcel:
             reward = 0.5
-            self.visited_tiles = set()
+            self.tile_counts = defaultdict(int)
             self.visited_maps = set()
             self.log_reward(reward, f"Picked up Oak's Parcel")
         
@@ -346,18 +347,19 @@ class PokemonWorldEnv(gym.Env):
     
     def punish_standing_still(self, world_state):
         punish = 0
-        memory_size = 20
+        memory_size = 30
 
         if not world_state["in_battle"] and not world_state["in_dialog"]:
             current_tile = (world_state["map"], world_state["x"], world_state["y"])   # map, x, y
 
-            if (len(self.last_places) > memory_size):
-                counts = self.last_places.count(current_tile)
-                if counts > (memory_size / 2):
-                    punish = 0.01
+            self.last_places.append(current_tile)
+            if len(self.last_places) > memory_size:
                 self.last_places.pop(0)
 
-            self.last_places.append(current_tile)
+            if len(self.last_places) == 30:
+                counts = self.last_places.count(current_tile)
+                if counts > (memory_size * 0.4):
+                    punish = 0.05
 
         return punish
     
